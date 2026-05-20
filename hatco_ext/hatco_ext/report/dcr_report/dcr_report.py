@@ -154,7 +154,7 @@ def get_data(filters):
     #   + Cash Receipts - Cash Payments +/- Internal Transfer(cash)
     cash_balance = (
         totals_map.get("Cash Sales", 0)
-        - get_cash_sales_return_total(date, company, cost_center)
+        + get_cash_sales_return_total(date, company, cost_center)
         - totals_map.get("Cash Purchases", 0)
         + totals_map.get("Customer Receipts (Cash)", 0)
         - totals_map.get("Supplier Payments (Cash)", 0)
