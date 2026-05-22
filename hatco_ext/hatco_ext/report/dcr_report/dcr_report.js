@@ -2,8 +2,9 @@
 // Copyright (c) 2026, Aravind R and contributors
 // For license information, please see license.txt
 
-//Filters for DCR Report
 frappe.query_reports["DCR Report"] = {
+    "tree": true,
+    "initial_depth": 0,
     "filters": [
         {
             "fieldname": "date",
@@ -16,7 +17,33 @@ frappe.query_reports["DCR Report"] = {
             "fieldname": "type",
             "label": "Type",
             "fieldtype": "Select",
-            "options": "\nCash Sales\nCard Sales\nCredit Sales\nCash Purchases\nCard Purchases\nCredit Purchases\nSales Return\nPurchase Return\nCustomer Receipts (Cash)\nCustomer Receipts\nSupplier Payments (Cash)\nSupplier Payments\nBank Receipts\nBank Payments\nCash Receipts\nCash Payments\nJournal Entry\nInternal Transfer\nCash Balance",
+            "options": [
+                "",
+                "Opening Cash Balance",
+                "Cash Sales",
+                "Card/Bank Sales",
+                "Credit Sales",
+                "Cash Sales Return",
+                "Card/Bank Sales Return",
+                "Credit Sales Return",
+                "Cash Purchases",
+                "Card/Bank Purchases",
+                "Credit Purchases",
+                "Cash Purchase Return",
+                "Card/Bank Purchase Return",
+                "Credit Purchase Return",
+                "Customer Receipts (Cash)",
+                "Customer Receipts",
+                "Supplier Payments (Cash)",
+                "Supplier Payments",
+                "Bank Receipts",
+                "Bank Payments",
+                "Cash Receipts",
+                "Cash Payments",
+                "Journal Entry",
+                "Internal Transfer",
+                "Cash Balance"
+            ].join("\n"),
             "reqd": 0
         },
         {
@@ -32,32 +59,27 @@ frappe.query_reports["DCR Report"] = {
             "fieldtype": "Link",
             "options": "Cost Center",
             "get_query": function() {
-             var company = frappe.query_report.get_filter_value("company");
-             if (company) {
-                 return {
-                     "filters": {
-                         "company": company
-                     }
-                 };
-             } else {
-                 return {};
-             }
-    }
-           }
+                var company = frappe.query_report.get_filter_value("company");
+                if (company) {
+                    return { "filters": { "company": company } };
+                }
+                return {};
+            }
+        }
     ],
 
-    // Types into a clickable link
-
     "formatter": function(value, row, column, data, default_formatter) {
-
         value = default_formatter(value, row, column, data);
 
         if (column.fieldname === "type" && data && data.voucher_type && data.voucher_no) {
-
-            return `<a href="/app/${frappe.router.slug(data.voucher_type)}/${data.voucher_no}"
+            value = `<a href="/app/${frappe.router.slug(data.voucher_type)}/${data.voucher_no}"
                     style="color:#000000; text-decoration:underline;">
                         ${value}
                     </a>`;
+        }
+
+        if (data && data.bold) {
+            return `<strong style="font-weight:700;">${value}</strong>`;
         }
 
         return value;
