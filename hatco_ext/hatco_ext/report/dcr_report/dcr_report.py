@@ -280,7 +280,7 @@ def fetch_sales_invoices(t, date,company, cost_center):
 
          LEFT JOIN `tabSales Invoice Payment` sip
             ON sip.parent = si.name
-        WHERE si.docstatus IN (0,1)
+        WHERE si.docstatus = 1
               AND si.is_return=0
               {date_condition}
               AND ( %(company)s IS NULL OR %(company)s = '' OR si.company = %(company)s )
@@ -341,7 +341,7 @@ def fetch_purchase_invoices(t, date,company, cost_center):
             ON per.reference_name = pi.name AND per.reference_doctype='Purchase Invoice'
         LEFT JOIN `tabPayment Entry` pe
             ON pe.name = per.parent
-        WHERE pi.docstatus IN (0,1)
+        WHERE pi.docstatus = 1
               AND pi.is_return=0
               {date_condition}
               AND ( %(company)s IS NULL OR %(company)s = '' OR pi.company = %(company)s )
@@ -387,7 +387,7 @@ def get_sales_returns(date,company,cost_center):
             ON per.reference_name=si.name AND per.reference_doctype='Sales Invoice'
         LEFT JOIN `tabPayment Entry` pe
             ON pe.name = per.parent
-        WHERE si.docstatus IN (0,1)
+        WHERE si.docstatus = 1
             AND si.is_return=1
             AND si.posting_date = %(date)s
             AND ( %(company)s IS NULL OR %(company)s = '' OR si.company = %(company)s )
@@ -419,7 +419,7 @@ def get_purchase_returns(date,company,cost_center):
             ON per.reference_name=pi.name AND per.reference_doctype='Purchase Invoice'
         LEFT JOIN `tabPayment Entry` pe
             ON pe.name = per.parent
-        WHERE pi.docstatus IN (0,1) AND pi.is_return=1
+        WHERE pi.docstatus = 1 AND pi.is_return=1
               AND pi.posting_date = %(date)s
               AND ( %(company)s IS NULL OR %(company)s = '' OR pi.company = %(company)s )
               AND ( %(cost_center)s IS NULL OR %(cost_center)s = '' OR pi.cost_center = %(cost_center)s )
@@ -452,7 +452,7 @@ def get_customer_receipts(date, company=None, cost_center=None, cash_only=None):
             AND per.reference_doctype = 'Sales Invoice'
         INNER JOIN `tabSales Invoice` si
             ON si.name = per.reference_name
-        WHERE pe.docstatus IN (0,1)
+        WHERE pe.docstatus = 1
               AND pe.posting_date = %(date)s
               AND pe.party_type = 'Customer'
               AND pe.posting_date != si.posting_date
@@ -490,7 +490,7 @@ def get_supplier_payments(date, company, cost_center, cash_only=None):
             AND per.reference_doctype = 'Purchase Invoice'
         LEFT JOIN `tabPurchase Invoice` pi
             ON pi.name = per.reference_name
-        WHERE pe.docstatus IN (0,1)
+        WHERE pe.docstatus = 1
               AND pe.posting_date = %(date)s
               AND pe.party_type = 'Supplier'
               {cash_condition}
@@ -531,7 +531,7 @@ def get_journal_entries(date, report_type=None, company=None, cost_center=None):
                 ON jea.parent=je.name
             INNER JOIN `tabAccount` acc
                 ON acc.name=jea.account
-            WHERE je.docstatus IN (0,1)
+            WHERE je.docstatus = 1
                   AND je.posting_date=%(date)s
                   AND {conditions}
                   AND (%(company)s IS NULL OR je.company = %(company)s)
@@ -552,7 +552,7 @@ def get_journal_entries(date, report_type=None, company=None, cost_center=None):
                 ON jea.parent = je.name
             INNER JOIN `tabAccount` acc
                 ON acc.name = jea.account
-            WHERE je.docstatus IN (0,1)
+            WHERE je.docstatus = 1
                   AND je.posting_date = %(date)s
                   AND (%(company)s IS NULL OR je.company = %(company)s)
                   AND (%(cost_center)s IS NULL OR jea.cost_center = %(cost_center)s)
@@ -571,7 +571,7 @@ def get_internal_transfers(date, company=None, cost_center=None):
             pe.paid_amount AS amount,
             pe.paid_amount AS invoice_total
         FROM `tabPayment Entry` pe
-        WHERE pe.docstatus IN (0,1)
+        WHERE pe.docstatus = 1
               AND pe.payment_type = 'Internal Transfer'
               AND pe.posting_date = %(date)s
               AND ( %(company)s IS NULL OR pe.company = %(company)s )
@@ -590,7 +590,7 @@ def get_cash_sales_return_total(date, company=None, cost_center=None):
         FROM `tabPayment Entry Reference` per
         JOIN `tabPayment Entry` pe ON pe.name = per.parent
         JOIN `tabSales Invoice` si ON si.name = per.reference_name
-        WHERE pe.docstatus IN (0,1)
+        WHERE pe.docstatus = 1
           AND per.reference_doctype = 'Sales Invoice'
           AND si.is_return = 1
           AND si.posting_date = %(date)s
@@ -617,7 +617,7 @@ def get_internal_transfer_cash_net(date, company=None, cost_center=None):
         FROM `tabPayment Entry` pe
         LEFT JOIN `tabAccount` pa_from ON pa_from.name = pe.paid_from
         LEFT JOIN `tabAccount` pa_to ON pa_to.name = pe.paid_to
-        WHERE pe.docstatus IN (0,1)
+        WHERE pe.docstatus = 1
           AND pe.payment_type = 'Internal Transfer'
           AND pe.posting_date = %(date)s
           AND ( %(company)s IS NULL OR pe.company = %(company)s )
