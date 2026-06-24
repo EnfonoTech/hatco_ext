@@ -266,6 +266,7 @@ def fetch_sales_invoices(t, date, company, cost_center):
             AND per.reference_doctype = 'Sales Invoice'
         LEFT JOIN `tabPayment Entry` pe
             ON pe.name = per.parent
+            AND pe.docstatus = 1
         LEFT JOIN `tabSales Invoice Payment` sip
             ON sip.parent = si.name
         WHERE si.docstatus = 1
@@ -380,6 +381,7 @@ def fetch_sales_returns(t, date, company, cost_center):
             AND per.reference_doctype = 'Sales Invoice'
         LEFT JOIN `tabPayment Entry` pe
             ON pe.name = per.parent
+            AND pe.docstatus = 1
         LEFT JOIN `tabSales Invoice Payment` sip
             ON sip.parent = si.name
         WHERE si.docstatus = 1
@@ -443,6 +445,7 @@ def fetch_purchase_invoices(t, date, company, cost_center):
             ON per.reference_name = pi.name AND per.reference_doctype = 'Purchase Invoice'
         LEFT JOIN `tabPayment Entry` pe
             ON pe.name = per.parent
+            AND pe.docstatus = 1
         WHERE pi.docstatus = 1
               AND pi.is_return = 0
               {date_condition}
@@ -513,6 +516,7 @@ def fetch_purchase_returns(t, date, company, cost_center):
             ON per.reference_name = pi.name AND per.reference_doctype = 'Purchase Invoice'
         LEFT JOIN `tabPayment Entry` pe
             ON pe.name = per.parent
+            AND pe.docstatus = 1
         WHERE pi.docstatus = 1
               AND pi.is_return = 1
               {date_condition}
