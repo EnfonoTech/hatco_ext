@@ -266,6 +266,7 @@ def fetch_sales_invoices(t, date, company, cost_center):
             AND per.reference_doctype = 'Sales Invoice'
         LEFT JOIN `tabPayment Entry` pe
             ON pe.name = per.parent
+            AND pe.docstatus = 1
         LEFT JOIN `tabSales Invoice Payment` sip
             ON sip.parent = si.name
         WHERE si.docstatus = 1
@@ -380,6 +381,7 @@ def fetch_sales_returns(t, date, company, cost_center):
             AND per.reference_doctype = 'Sales Invoice'
         LEFT JOIN `tabPayment Entry` pe
             ON pe.name = per.parent
+            AND pe.docstatus = 1
         LEFT JOIN `tabSales Invoice Payment` sip
             ON sip.parent = si.name
         WHERE si.docstatus = 1
