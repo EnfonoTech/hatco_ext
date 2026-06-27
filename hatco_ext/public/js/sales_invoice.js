@@ -149,7 +149,8 @@ function show_purchase_history_dialog(frm) {
             method: 'hatco_ext.api.get_purchase_history',
             args: {
                 item_code: item_code,
-                company: frm.doc.company
+                company: frm.doc.company,
+                cost_center: frm.doc.cost_center || null
             },
             callback: function(r) {
                 let rows = r.message || [];
