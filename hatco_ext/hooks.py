@@ -144,13 +144,24 @@ doctype_js = {
 # ---------------
 # Hook on document methods and events
 
-# doc_events = {
-# 	"*": {
-# 		"on_update": "method",
-# 		"on_cancel": "method",
-# 		"on_trash": "method"
-# 	}
-# }
+# Cost Center auto-fill for item/tax rows.
+# Fired on before_validate AND validate: tax rows can be appended by ERPNext
+# during the controller's own validate (set_missing_values -> set_taxes), so one
+# pass is not enough. set_missing_cost_center() only fills blanks, so running it
+# twice is harmless. See hatco_ext/cost_center.py for the full explanation.
+_COST_CENTER_SYNC = {
+	"before_validate": "hatco_ext.cost_center.set_missing_cost_center",
+	"validate": "hatco_ext.cost_center.set_missing_cost_center",
+}
+
+doc_events = {
+	"Sales Invoice": _COST_CENTER_SYNC,
+	"Purchase Invoice": _COST_CENTER_SYNC,
+	"Sales Order": _COST_CENTER_SYNC,
+	"Purchase Order": _COST_CENTER_SYNC,
+	"Delivery Note": _COST_CENTER_SYNC,
+	"Purchase Receipt": _COST_CENTER_SYNC,
+}
 
 # Scheduled Tasks
 # ---------------

@@ -12,18 +12,23 @@ frappe.ui.form.on('Delivery Note', {
         }
     },
     onload: function(frm) {
-        if (frm.doc.cost_center) {
-            $.each(frm.doc.items || [], function(i, row) {
-                if (!row.cost_center) {
-                    frappe.model.set_value(row.doctype, row.name, 'cost_center', frm.doc.cost_center);
-                }
-            });
-            $.each(frm.doc.taxes || [], function(i, row) {
-                if (!row.cost_center) {
-                    frappe.model.set_value(row.doctype, row.name, 'cost_center', frm.doc.cost_center);
-                }
-            });
+        // Only stamp rows on a brand-new form. On a saved or submitted document the
+        // server-side hook (hatco_ext.cost_center.set_missing_cost_center) already
+        // fills blank Cost Centers on save, and writing to rows here would mark a
+        // clean document dirty -> the spurious "Not Saved" state and Update button.
+        if (!frm.is_new() || !frm.doc.cost_center) {
+            return;
         }
+        $.each(frm.doc.items || [], function(i, row) {
+            if (!row.cost_center) {
+                frappe.model.set_value(row.doctype, row.name, 'cost_center', frm.doc.cost_center);
+            }
+        });
+        $.each(frm.doc.taxes || [], function(i, row) {
+            if (!row.cost_center) {
+                frappe.model.set_value(row.doctype, row.name, 'cost_center', frm.doc.cost_center);
+            }
+        });
     }
 });
 
