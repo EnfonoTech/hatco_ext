@@ -401,22 +401,61 @@ def fetch_sales_returns(t, date, company, cost_center):
 def fetch_purchase_invoices(t, date, company, cost_center):
 
     if t == "Cash Purchases":
-        amount_field = "IFNULL(SUM(per.allocated_amount),0)"
+        # is_paid=1 → settled directly on the invoice (pi.paid_amount), no separate Payment Entry exists
+        amount_field = """
+            IFNULL(
+                CASE
+                    WHEN pi.is_paid = 1 THEN MAX(pi.paid_amount)
+                    ELSE SUM(per.allocated_amount)
+                END
+            ,0)
+        """
         date_condition = """
             AND pi.posting_date = %(date)s
-            AND pe.posting_date = %(date)s
-            AND pe.mode_of_payment IN (
-                SELECT name FROM `tabMode of Payment` WHERE type = 'Cash'
+            AND (
+                (
+                    pi.is_paid = 1
+                    AND pi.mode_of_payment IN (
+                        SELECT name FROM `tabMode of Payment` WHERE type = 'Cash'
+                    )
+                )
+                OR
+                (
+                    IFNULL(pi.is_paid, 0) = 0
+                    AND pe.posting_date = %(date)s
+                    AND pe.mode_of_payment IN (
+                        SELECT name FROM `tabMode of Payment` WHERE type = 'Cash'
+                    )
+                )
             )
         """
 
     elif t == "Card/Bank Purchases":
-        amount_field = "IFNULL(SUM(per.allocated_amount),0)"
+        amount_field = """
+            IFNULL(
+                CASE
+                    WHEN pi.is_paid = 1 THEN MAX(pi.paid_amount)
+                    ELSE SUM(per.allocated_amount)
+                END
+            ,0)
+        """
         date_condition = """
             AND pi.posting_date = %(date)s
-            AND pe.posting_date = %(date)s
-            AND pe.mode_of_payment IN (
-                SELECT name FROM `tabMode of Payment` WHERE type IN ('Bank','Card')
+            AND (
+                (
+                    pi.is_paid = 1
+                    AND pi.mode_of_payment IN (
+                        SELECT name FROM `tabMode of Payment` WHERE type IN ('Bank','Card')
+                    )
+                )
+                OR
+                (
+                    IFNULL(pi.is_paid, 0) = 0
+                    AND pe.posting_date = %(date)s
+                    AND pe.mode_of_payment IN (
+                        SELECT name FROM `tabMode of Payment` WHERE type IN ('Bank','Card')
+                    )
+                )
             )
         """
 
@@ -424,6 +463,7 @@ def fetch_purchase_invoices(t, date, company, cost_center):
         amount_field = "pi.grand_total"
         date_condition = """
             AND pi.posting_date = %(date)s
+            AND IFNULL(pi.is_paid, 0) = 0
             AND NOT EXISTS (
                 SELECT 1
                 FROM `tabPayment Entry Reference` per2
@@ -470,24 +510,64 @@ def fetch_purchase_returns(t, date, company, cost_center):
     if t == "Cash Purchase Return":
         # payment_type='Receive' because the company receives cash back from supplier
         # allocated_amount stays positive — this is cash coming IN
-        amount_field = "IFNULL(SUM(per.allocated_amount),0)"
+        # is_paid=1 → refunded directly on the return invoice; ERPNext stores pi.paid_amount
+        # negated for returns (make_return_doc), so negate again here to get a positive inflow
+        amount_field = """
+            IFNULL(
+                CASE
+                    WHEN pi.is_paid = 1 THEN MAX(-pi.paid_amount)
+                    ELSE SUM(per.allocated_amount)
+                END
+            ,0)
+        """
         date_condition = """
             AND pi.posting_date = %(date)s
-            AND pe.posting_date = %(date)s
-            AND pe.payment_type = 'Receive'
-            AND pe.mode_of_payment IN (
-                SELECT name FROM `tabMode of Payment` WHERE type = 'Cash'
+            AND (
+                (
+                    pi.is_paid = 1
+                    AND pi.mode_of_payment IN (
+                        SELECT name FROM `tabMode of Payment` WHERE type = 'Cash'
+                    )
+                )
+                OR
+                (
+                    IFNULL(pi.is_paid, 0) = 0
+                    AND pe.posting_date = %(date)s
+                    AND pe.payment_type = 'Receive'
+                    AND pe.mode_of_payment IN (
+                        SELECT name FROM `tabMode of Payment` WHERE type = 'Cash'
+                    )
+                )
             )
         """
 
     elif t == "Card/Bank Purchase Return":
-        amount_field = "IFNULL(SUM(per.allocated_amount),0)"
+        amount_field = """
+            IFNULL(
+                CASE
+                    WHEN pi.is_paid = 1 THEN MAX(-pi.paid_amount)
+                    ELSE SUM(per.allocated_amount)
+                END
+            ,0)
+        """
         date_condition = """
             AND pi.posting_date = %(date)s
-            AND pe.posting_date = %(date)s
-            AND pe.payment_type = 'Receive'
-            AND pe.mode_of_payment IN (
-                SELECT name FROM `tabMode of Payment` WHERE type IN ('Bank','Card')
+            AND (
+                (
+                    pi.is_paid = 1
+                    AND pi.mode_of_payment IN (
+                        SELECT name FROM `tabMode of Payment` WHERE type IN ('Bank','Card')
+                    )
+                )
+                OR
+                (
+                    IFNULL(pi.is_paid, 0) = 0
+                    AND pe.posting_date = %(date)s
+                    AND pe.payment_type = 'Receive'
+                    AND pe.mode_of_payment IN (
+                        SELECT name FROM `tabMode of Payment` WHERE type IN ('Bank','Card')
+                    )
+                )
             )
         """
 
@@ -495,6 +575,7 @@ def fetch_purchase_returns(t, date, company, cost_center):
         amount_field = "pi.grand_total"
         date_condition = """
             AND pi.posting_date = %(date)s
+            AND IFNULL(pi.is_paid, 0) = 0
             AND NOT EXISTS (
                 SELECT 1
                 FROM `tabPayment Entry Reference` per2
