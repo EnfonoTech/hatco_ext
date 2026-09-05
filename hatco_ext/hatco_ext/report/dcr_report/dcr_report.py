@@ -644,6 +644,8 @@ def get_customer_receipts(date, company=None, cost_center=None, cash_only=None):
               {cash_condition}
               AND ( %(company)s IS NULL OR %(company)s = '' OR pe.company = %(company)s )
               AND ( %(cost_center)s IS NULL OR %(cost_center)s = '' OR pe.cost_center = %(cost_center)s )
+        GROUP BY pe.name, pe.paid_amount
+        ORDER BY pe.posting_date ASC
     """, {
         "date": date,
         "company": company,
@@ -736,8 +738,13 @@ def get_journal_entries(date, report_type=None, company=None, cost_center=None):
                 'Journal Entry' AS document,
                 je.name AS id,
                 'Posted' AS status,
-                SUM(jea.debit + jea.credit) AS invoice_total,
-                SUM(CASE WHEN jea.debit>0 THEN jea.debit ELSE jea.credit END) AS amount
+                -- A journal entry is worth its total debit (== its total credit).
+                -- Summing debit-or-credit across every line counted both sides of
+                -- a balanced entry and reported 2x its value.
+                -- GREATEST keeps this correct when a Cost Center filter admits
+                -- only one side of the entry, where that side is the real figure.
+                GREATEST(SUM(jea.debit), SUM(jea.credit)) AS invoice_total,
+                GREATEST(SUM(jea.debit), SUM(jea.credit)) AS amount
             FROM `tabJournal Entry` je
             INNER JOIN `tabJournal Entry Account` jea
                 ON jea.parent = je.name
